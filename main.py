@@ -174,7 +174,7 @@ async def continuous_spam_loop():
         
         while True:
             # ... rest of your existing spam loop ...
-        while True:
+
             # Check the environment variable before every volley
             # To stop, you must restart the app after changing the variable in Render
             if not SPAM_ENABLED:
