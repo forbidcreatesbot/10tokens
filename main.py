@@ -5,29 +5,39 @@ from flask import Flask
 import json
 import sys
 import json
+import random
 # Pre-define fixed headers to avoid dynamic dictionary generation
 PRE_BUILT_HEADERS = {
     "Content-Type": "application/json",
     "Connection": "keep-alive" # Forces TCP connection to stay open
 }
 
-# 1. The text you want to repeat
-BASE_TEXT = "testing for educational"
-MAX_CAP = 1950  # Safety buffer under the 2000 character hard limit
+# Add as many base messages as you want here
+BASE_MESSAGES = [
+    "testing for educational",
+    "initiating swarm sequence"
+]
 
-def build_max_payload(text: str) -> bytes:
-    formatted_line = f"# {text}\n"
-    line_length = len(formatted_line)
-    
-    # Calculate exactly how many full lines fit under the ceiling
-    repetitions = MAX_CAP // line_length
-    payload_string = "".join([formatted_line] * repetitions)
-    
-    # Pre-compile straight to raw binary bytes for maximum speed
-    return json.dumps({"content": payload_string}).encode('utf-8')
+# Add all the emojis you want to cycle through here
+EMOJIS = ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💖"]
+MAX_CAP = 1950  
 
-# This variable now holds the final optimized payload in memory
-PRE_COMPILED_BYTES = build_max_payload(BASE_TEXT)
+def build_payload_pool() -> list:
+    pool = []
+    # Loop through every combination of message and emoji
+    for msg in BASE_MESSAGES:
+        for emoji in EMOJIS:
+            formatted_line = f"# {msg} - {emoji}\n"
+            line_length = len(formatted_line)
+            repetitions = MAX_CAP // line_length
+            payload_string = "".join([formatted_line] * repetitions)
+            
+            # Pre-compile straight to raw bytes and add to our arsenal
+            pool.append(json.dumps({"content": payload_string}).encode('utf-8'))
+    return pool
+
+# This variable now holds a massive list of ready-to-fire byte payloads
+PAYLOAD_POOL = build_payload_pool()
 
 if sys.platform != "win32":
     import uvloop
@@ -42,7 +52,9 @@ async def hyper_speed_fire(session, token, channel_id):
     
     try:
         # data= accepts raw bytes directly, bypassing data encoding steps entirely
-        async with session.request("POST", url, headers=headers, data=PRE_COMPILED_BYTES) as resp:
+        # Grab a random pre-compiled payload from the arsenal
+        current_payload = random.choice(PAYLOAD_POOL)
+        async with session.request("POST", url, headers=headers, data=current_payload) as resp:
             if resp.status == 429:
                 # Instantly capture the rate limit header without parsing the full JSON body
                 retry_after = float(resp.headers.get("X-RateLimit-Reset-After", 1))
