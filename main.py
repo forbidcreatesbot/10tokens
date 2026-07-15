@@ -80,13 +80,13 @@ async def fire_swarm(session):
     tasks = []
     for channel_id in CHANNELS:
         for token in TOKENS:
-            tasks.append(send_msg(session, token, channel_id))
+            # CHANGE THIS LINE: Swap 'send_msg' with 'hyper_speed_fire'
+            tasks.append(hyper_speed_fire(session, token, channel_id))
     
     if not tasks:
         print("No tokens or channels loaded.")
         return []
 
-    # Fire all 10 simultaneously
     return await asyncio.gather(*tasks)
 
 async def continuous_spam_loop():
