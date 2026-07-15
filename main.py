@@ -44,6 +44,19 @@ async def fire_all():
         results = await asyncio.gather(*tasks)
         return results
 
+async def continuous_blast():
+    while True:
+        # Fire the swarm
+        codes = await fire_all()
+        print(f"Fired! Codes: {codes}")
+        
+        # If Discord throws a 429, we must pause to avoid an IP ban
+        if 429 in codes:
+            print("Rate limited by Discord! Pausing for 5 seconds...")
+            await asyncio.sleep(1)
+        else:
+            # Even on success, you need a micro-delay to stay under the 50/sec limit
+            await asyncio.sleep(1)
 @app.route('/fire')
 def trigger_blast():
     if not TOKENS or not CHANNELS:
