@@ -5,6 +5,11 @@ from flask import Flask
 import json
 import sys
 import json
+# Pre-define fixed headers to avoid dynamic dictionary generation
+PRE_BUILT_HEADERS = {
+    "Content-Type": "application/json",
+    "Connection": "keep-alive" # Forces TCP connection to stay open
+}
 
 # 1. The text you want to repeat
 BASE_TEXT = "testing for educational"
@@ -46,15 +51,8 @@ async def hyper_speed_fire(session, token, channel_id):
     except Exception as e:
         return {"status": "network_error", "wait": 0}
 
-# Pre-compile the exact payload to raw bytes ahead of time
-raw_json_data = {"content": "Your optimized message"}
-PRE_COMPILED_BYTES = json.dumps(raw_json_data).encode('utf-8')
 
-# Pre-define fixed headers to avoid dynamic dictionary generation
-PRE_BUILT_HEADERS = {
-    "Content-Type": "application/json",
-    "Connection": "keep-alive" # Forces TCP connection to stay open
-}
+
 
 app = Flask(__name__)
 
@@ -107,11 +105,13 @@ async def continuous_spam_loop():
             results = await fire_swarm(session)
             
             # Find the longest required pause requested by Discord
+            # Find the longest required pause requested by Discord
             max_retry = 0
             for result in results:
                 if isinstance(result, dict) and result['status'] == 429:
-                    if result['retry_after'] > max_retry:
-                        max_retry = result['retry_after']
+                    # FIX: Change 'retry_after' to 'wait' right here
+                    if result['wait'] > max_retry:
+                        max_retry = result['wait']
             
             if max_retry > 0:
                 print(f"Rate limited. Pausing swarm for {max_retry} seconds...")
