@@ -4,20 +4,25 @@ import aiohttp
 from flask import Flask
 from threading import Thread
 
-# Initialize Flask to maintain persistent cloud execution
 app = Flask(__name__)
 
-# Dynamically load token1 through token10 from environment variables
-TOKENS = [os.getenv(f"token{i}") for i in range(1, 11) if os.getenv(f"token{i}")]
-CHANNEL_ID = os.getenv("CHANNEL_ID", "YOUR_CHANNEL_ID_HERE")
+# 1. Fetch and split the comma-separated environment variables
+# Example format in Render: "token1,token2,token3"
+raw_tokens = os.getenv("BOT_TOKENS", "")
+TOKENS = [t.strip() for t in raw_tokens.split(",") if t.strip()]
+
+# Example format in Render: "channel1,channel2"
+raw_channels = os.getenv("CHANNEL_IDS", "")
+CHANNELS = [c.strip() for c in raw_channels.split(",") if c.strip()]
+
 MESSAGE_CONTENT = "Incoming transmission from the swarm."
 
 @app.route('/')
 def health_check():
     return "Engine is online and waiting.", 200
 
-async def send_msg(session, token):
-    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages"
+async def send_msg(session, token, channel_id):
+    url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
     headers = {
         "Authorization": f"Bot {token}",
         "Content-Type": "application/json"
@@ -34,21 +39,29 @@ async def send_msg(session, token):
 async def fire_all():
     # Opening a single session for all requests drastically reduces overhead
     async with aiohttp.ClientSession() as session:
-        # Create all 10 network tasks in memory
-        tasks = [send_msg(session, token) for token in TOKENS]
+        tasks = []
         
+        # Loop through every channel and every token to build the strike package
+        for channel_id in CHANNELS:
+            for token in TOKENS:
+                tasks.append(send_msg(session, token, channel_id))
+        
+        if not tasks:
+            print("Error: No tokens or channels loaded.")
+            return
+
         # asyncio.gather fires them all concurrently — no waiting in line
         results = await asyncio.gather(*tasks)
         print(f"Blast fired. Status codes: {results}")
 
 @app.route('/fire')
 def trigger_blast():
-    if not TOKENS:
-        return "Error: No tokens found in environment variables.", 400
+    if not TOKENS or not CHANNELS:
+        return "Error: Missing BOT_TOKENS or CHANNEL_IDS in environment variables.", 400
     
     # Trigger the async event loop from the synchronous Flask route
     asyncio.run(fire_all())
-    return "All 10 bots fired successfully!", 200
+    return f"Fired {len(TOKENS)} bots into {len(CHANNELS)} channels!", 200
 
 def run_web():
     port = int(os.environ.get("PORT", 8080))
