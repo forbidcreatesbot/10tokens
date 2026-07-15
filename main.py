@@ -174,9 +174,7 @@ async def continuous_spam_loop():
         asyncio.create_task(phantom_name_loop(session))
         
         while True:
-            # ... rest of your existing spam loop ...
-        # ADD THIS LINE: It starts the actual loop
-        while True:
+
             # Check the environment variable before every volley
             if not SPAM_ENABLED:
                 print("Spam is disabled. Idling...")
