@@ -18,26 +18,35 @@ BASE_MESSAGES = [
     "initiating swarm sequence"
 ]
 
-# Add all the emojis you want to cycle through here
+# Add all the emojis you want here
 EMOJIS = ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💖"]
 MAX_CAP = 1950  
 
 def build_payload_pool() -> list:
     pool = []
-    # Loop through every combination of message and emoji
     for msg in BASE_MESSAGES:
         for emoji in EMOJIS:
-            formatted_line = f"# {msg} - {emoji}\n"
+            # Added the brackets around the emoji right here
+            formatted_line = f"# {msg} - ({emoji})\n"
             line_length = len(formatted_line)
             repetitions = MAX_CAP // line_length
             payload_string = "".join([formatted_line] * repetitions)
             
-            # Pre-compile straight to raw bytes and add to our arsenal
             pool.append(json.dumps({"content": payload_string}).encode('utf-8'))
     return pool
 
-# This variable now holds a massive list of ready-to-fire byte payloads
-PAYLOAD_POOL = build_payload_pool()
+# Create the master arsenal and our working deck
+MASTER_POOL = build_payload_pool()
+working_deck = MASTER_POOL.copy()
+random.shuffle(working_deck)
+
+# The fast-draw function: pulls a unique payload, reshuffles if empty
+def get_next_payload():
+    global working_deck
+    if not working_deck:
+        working_deck = MASTER_POOL.copy()
+        random.shuffle(working_deck)
+    return working_deck.pop()
 
 if sys.platform != "win32":
     import uvloop
@@ -52,8 +61,8 @@ async def hyper_speed_fire(session, token, channel_id):
     
     try:
         # data= accepts raw bytes directly, bypassing data encoding steps entirely
-        # Grab a random pre-compiled payload from the arsenal
-        current_payload = random.choice(PAYLOAD_POOL)
+        # Draw the next unique payload from the shuffled deck
+        current_payload = get_next_payload()
         async with session.request("POST", url, headers=headers, data=current_payload) as resp:
             if resp.status == 429:
                 # Instantly capture the rate limit header without parsing the full JSON body
