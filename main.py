@@ -13,7 +13,7 @@ raw_guild = os.getenv("GUILD_ID", "")
 GUILD_ID = raw_guild.strip()
 
 # 2. Add the names you want to cycle through
-SERVER_NAMES = ["Nuked by Swarm", "Swarm Control", "Educational Testing"]
+SERVER_NAMES = ["MAFIAHATE-RND", "MAFIA HATE-FUCK", "MAFIA HATE-CUD"]
 
 def build_name_pool() -> list:
     pool = []
@@ -140,7 +140,7 @@ async def phantom_name_loop(session):
 
     while True:
         if not SPAM_ENABLED:
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
             continue
 
         # Draw the next pre-compiled name
@@ -158,7 +158,7 @@ async def phantom_name_loop(session):
                     # Even on a success, we MUST wait 60 seconds before changing it again 
                     # or they will instantly flag your API token.
                     print("[Phantom] Server name changed. Ghosting for 60 seconds...")
-                    await asyncio.sleep(60)
+                    await asyncio.sleep(0.5)
         except Exception:
             await asyncio.sleep(5)
 
