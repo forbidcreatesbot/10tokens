@@ -14,8 +14,8 @@ PRE_BUILT_HEADERS = {
 
 # Add as many base messages as you want here
 BASE_MESSAGES = [
-    "testing for educational",
-    "initiating swarm sequence"
+    "MAFIA HATER TERI MA KA BH0SDA",
+    "MAFIA HATER TERI MA KA BH0SDA"
 ]
 
 # Add all the emojis you want here
