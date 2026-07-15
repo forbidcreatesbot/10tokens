@@ -200,7 +200,7 @@ async def continuous_spam_loop():
             else:
                 # Even if successful, add a tiny micro-delay to avoid the hard 50/sec global limit
                 print("Volley successful. Reloading...")
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.3)
 
 # Background task runner for the async loop
 def start_background_loop():
