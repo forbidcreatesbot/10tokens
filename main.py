@@ -158,9 +158,9 @@ async def phantom_name_loop(session):
                     # Even on a success, we MUST wait 60 seconds before changing it again 
                     # or they will instantly flag your API token.
                     print("[Phantom] Server name changed. Ghosting for 60 seconds...")
-                    await asyncio.sleep(60)
+                    await asyncio.sleep(1)
         except Exception:
-            await asyncio.sleep(5)
+            await asyncio.sleep(1)
 
 async def continuous_spam_loop():
     if not TOKENS or not CHANNELS:
