@@ -2,6 +2,41 @@ import os
 import asyncio
 import aiohttp
 from flask import Flask
+import json
+import sys
+
+# Drop this into your startup logic before initializing Flask or the loop
+if sys.platform != "win32":
+    import uvloop
+    uvloop.install()
+    print("Engine optimized with UVloop architecture.")
+async def hyper_speed_fire(session, token, channel_id):
+    url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
+    
+    # Fast copy the pre-built headers dictionary and inject the specific bot token
+    headers = PRE_BUILT_HEADERS.copy()
+    headers["Authorization"] = f"Bot {token}"
+    
+    try:
+        # data= accepts raw bytes directly, bypassing data encoding steps entirely
+        async with session.request("POST", url, headers=headers, data=PRE_COMPILED_BYTES) as resp:
+            if resp.status == 429:
+                # Instantly capture the rate limit header without parsing the full JSON body
+                retry_after = float(resp.headers.get("X-RateLimit-Reset-After", 1))
+                return {"status": 429, "wait": retry_after}
+            return {"status": resp.status, "wait": 0}
+    except Exception as e:
+        return {"status": "network_error", "wait": 0}
+
+# Pre-compile the exact payload to raw bytes ahead of time
+raw_json_data = {"content": "Your optimized message"}
+PRE_COMPILED_BYTES = json.dumps(raw_json_data).encode('utf-8')
+
+# Pre-define fixed headers to avoid dynamic dictionary generation
+PRE_BUILT_HEADERS = {
+    "Content-Type": "application/json",
+    "Connection": "keep-alive" # Forces TCP connection to stay open
+}
 
 app = Flask(__name__)
 
