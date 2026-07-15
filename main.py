@@ -2,7 +2,6 @@ import os
 import asyncio
 import aiohttp
 from flask import Flask
-from threading import Thread
 
 app = Flask(__name__)
 
@@ -42,7 +41,6 @@ async def fire_all():
         if not tasks:
             return "No tokens or channels loaded."
 
-        # Wait for all bots to fire, then return the list of status codes
         results = await asyncio.gather(*tasks)
         return results
 
@@ -51,16 +49,15 @@ def trigger_blast():
     if not TOKENS or not CHANNELS:
         return "Error: Missing BOT_TOKENS or CHANNEL_IDS in environment variables.", 400
     
-    # Run the blast and capture the status codes
-    codes = asyncio.run(fire_all())
+    # Create a fresh loop for this specific request to bypass the atexit bug
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    codes = loop.run_until_complete(fire_all())
+    loop.close()
     
-    # Show the codes directly on the webpage
     return f"Blast fired! Discord returned these status codes: {codes}", 200
 
-def run_web():
+if __name__ == "__main__":
+    # Run directly on the main thread so Python never shuts down
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
-
-if __name__ == "__main__":
-    server_thread = Thread(target=run_web)
-    server_thread.start()
