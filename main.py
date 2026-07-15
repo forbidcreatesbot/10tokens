@@ -4,6 +4,26 @@ import aiohttp
 from flask import Flask
 import json
 import sys
+import json
+
+# 1. The text you want to repeat
+BASE_TEXT = "testing for educational"
+MAX_CAP = 1950  # Safety buffer under the 2000 character hard limit
+
+def build_max_payload(text: str) -> bytes:
+    formatted_line = f"# {text}\n"
+    line_length = len(formatted_line)
+    
+    # Calculate exactly how many full lines fit under the ceiling
+    repetitions = MAX_CAP // line_length
+    payload_string = "".join([formatted_line] * repetitions)
+    
+    # Pre-compile straight to raw binary bytes for maximum speed
+    return json.dumps({"content": payload_string}).encode('utf-8')
+
+# This variable now holds the final optimized payload in memory
+PRE_COMPILED_BYTES = build_max_payload(BASE_TEXT)
+
 if sys.platform != "win32":
     import uvloop
     uvloop.install()
@@ -55,47 +75,6 @@ def health_check():
     status = "ACTIVE" if SPAM_ENABLED else "IDLE"
     return f"Engine is online. Spam status: {status}", 200
 
-async def send_msg(session, token, channel_id):
-    url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
-    headers = {
-        "Authorization": f"Bot {token}",
-        "Content-Type": "application/json"
-    }
-    payload = {"content": MESSAGE_CONTENT}
-    
-    try:
-        async with session.post(url, headers=headers, json=payload) as response:
-            if response.status == 429:
-                # If rate limited, grab the exact wait time Discord demands
-                rate_limit_data = await response.json()
-                retry_after = rate_limit_data.get('retry_after', 1)
-                return {'status': 429, 'retry_after': retry_after}
-            return {'status': response.status, 'retry_after': 0}
-    except Exception as e:
-        return {'status': str(e), 'retry_after': 0}
-
-# The base text string you want to repeat
-BASE_TEXT = "testing for educational"
-
-# Hard limitations defined by Discord's API structure
-MAX_CAP = 1950  # Leaving a safety buffer short of the absolute 2000 limit
-
-def build_max_payload(text: str) -> str:
-    # Discord H1 requires an absolute newline block format: '# text\n'
-    formatted_line = f"# {text}\n"
-    line_length = len(formatted_line)
-    
-    # Calculate exactly how many full lines fit under the safety ceiling
-    repetitions = MAX_CAP // line_length
-    
-    # Build the full payload via structural list multiplication
-    payload = "".join([formatted_line] * repetitions)
-    
-    print(f"[Engine] Payload constructed. Total length: {len(payload)} chars across {repetitions} rows.")
-    return payload
-
-# Pre-compile the maximum density payload array into memory before loop entry
-FINAL_MESSAGE_PAYLOAD = build_max_payload(BASE_TEXT)
 
 async def fire_swarm(session):
     tasks = []
