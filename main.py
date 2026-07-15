@@ -6,26 +6,7 @@ import json
 import sys
 import json
 import random
-import itertools # Add this to your imports at the top
 
-# 1. Fetch the Server (Guild) ID from Render
-raw_guild = os.getenv("GUILD_ID", "")
-GUILD_ID = raw_guild.strip()
-
-# 2. Add the names you want to cycle through
-SERVER_NAMES = ["Nuked by Swarm", "Swarm Control", "Educational Testing"]
-
-def build_name_pool() -> list:
-    pool = []
-    for name in SERVER_NAMES:
-        # Pre-compile the name changes to raw bytes
-        pool.append(json.dumps({"name": name}).encode('utf-8'))
-    return pool
-
-NAME_POOL = build_name_pool()
-# itertools.cycle creates an infinite loop that auto-restarts from the beginning
-name_cycler = itertools.cycle(NAME_POOL)
-# Pre-define fixed headers to avoid dynamic dictionary generation
 PRE_BUILT_HEADERS = {
     "Content-Type": "application/json",
     "Connection": "keep-alive" # Forces TCP connection to stay open
@@ -127,40 +108,7 @@ async def fire_swarm(session):
 
     return await asyncio.gather(*tasks)
 
-async def phantom_name_loop(session):
-    if not GUILD_ID or not TOKENS:
-        return
-        
-    print("[Phantom] Server name cycler initiated in background...")
-    master_token = TOKENS[0] # Use the first bot to control the server name
-    url = f"https://discord.com/api/v10/guilds/{GUILD_ID}"
-    
-    headers = PRE_BUILT_HEADERS.copy()
-    headers["Authorization"] = f"Bot {master_token}"
 
-    while True:
-        if not SPAM_ENABLED:
-            await asyncio.sleep(10)
-            continue
-
-        # Draw the next pre-compiled name
-        next_name_payload = next(name_cycler)
-        
-        try:
-            # PATCH is the HTTP method used to update server settings
-            async with session.request("PATCH", url, headers=headers, data=next_name_payload) as resp:
-                if resp.status == 429:
-                    wait_time = float(resp.headers.get("X-RateLimit-Reset-After", 5))
-                    print(f"[Phantom] Guild rate limit hit. Sleeping {wait_time}s")
-                    await asyncio.sleep(wait_time)
-                else:
-                    # Discord is extremely strict about Guild updates. 
-                    # Even on a success, we MUST wait 60 seconds before changing it again 
-                    # or they will instantly flag your API token.
-                    print("[Phantom] Server name changed. Ghosting for 60 seconds...")
-                    await asyncio.sleep(1)
-        except Exception:
-            await asyncio.sleep(1)
 
 async def continuous_spam_loop():
     if not TOKENS or not CHANNELS:
@@ -169,10 +117,6 @@ async def continuous_spam_loop():
 
     print("Starting continuous spam loop...")
     async with aiohttp.ClientSession() as session:
-        # ADD THIS LINE: Fires off the name changer completely independent of the spam loop
-        asyncio.create_task(phantom_name_loop(session))
-        
-        while True:
             # ... rest of your existing spam loop ...
 
             # Check the environment variable before every volley
