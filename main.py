@@ -117,16 +117,17 @@ async def continuous_spam_loop():
 
     print("Starting continuous spam loop...")
     async with aiohttp.ClientSession() as session:
-            # ... rest of your existing spam loop ...
-
+        # ADD THIS LINE: It starts the actual loop
+        while True:
             # Check the environment variable before every volley
-            # To stop, you must restart the app after changing the variable in Render
             if not SPAM_ENABLED:
                 print("Spam is disabled. Idling...")
                 await asyncio.sleep(10)
                 continue
 
             results = await fire_swarm(session)
+            
+            # ... rest of your code ...
             
             # Find the longest required pause requested by Discord
             # Find the longest required pause requested by Discord
