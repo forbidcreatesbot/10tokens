@@ -4,8 +4,6 @@ import aiohttp
 from flask import Flask
 import json
 import sys
-
-# Drop this into your startup logic before initializing Flask or the loop
 if sys.platform != "win32":
     import uvloop
     uvloop.install()
