@@ -13,7 +13,7 @@ raw_guild = os.getenv("GUILD_ID", "")
 GUILD_ID = raw_guild.strip()
 
 # 2. Add the names you want to cycle through
-SERVER_NAMES = ["MAFIAHATE-RND", "MAFIA HATE-FUCK", "MAFIA HATE-CUD"]
+SERVER_NAMES = ["MAFIAH ATE-RND", "MAFIA HATE-FUCK", "MAFIA HATE-CUD"]
 
 def build_name_pool() -> list:
     pool = []
