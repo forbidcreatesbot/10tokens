@@ -118,14 +118,16 @@ async def continuous_spam_loop():
 
     print("Starting continuous spam loop...")
     async with aiohttp.ClientSession() as session:
-
-            # Check the environment variable before every volley
+        # 1. You must declare the loop here
+        while True:
+            # 2. Everything inside the loop must be indented 4 spaces relative to 'while'
             if not SPAM_ENABLED:
                 print("Spam is disabled. Idling...")
                 await asyncio.sleep(10)
-                continue
+                continue  # This now properly refers to the 'while True' loop
 
             results = await fire_swarm(session)
+            # ... rest of your loop contents ...
             
             # ... rest of your code ...
             
