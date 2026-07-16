@@ -118,10 +118,6 @@ async def continuous_spam_loop():
 
     print("Starting continuous spam loop...")
     async with aiohttp.ClientSession() as session:
-        # ADD THIS LINE: Fires off the name changer completely independent of the spam loop
-        asyncio.create_task(phantom_name_loop(session))
-        
-        while True:
 
             # Check the environment variable before every volley
             if not SPAM_ENABLED:
