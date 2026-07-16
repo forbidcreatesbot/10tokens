@@ -15,8 +15,8 @@ PRE_BUILT_HEADERS = {
 
 # Add as many base messages as you want here
 BASE_MESSAGES = [
-    "MAFIA HATER/ev RANDAL",
-    "MAFIA HATER/ev RANDAL"
+    "MAFIA HATER RANDAL",
+    "MAFIA HATER RANDAL"
 ]
 
 # Add all the emojis you want here
